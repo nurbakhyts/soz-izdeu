@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="kk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Қазақша сөз іздеу</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Golos+Text:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #F5F4FB;
+    --card: #FFFFFF;
+    --border: #DEDBF2;
+    --chip: #EDEBFA;
+    --chip-border: #DAD5F4;
+    --accent: #6D5AE6;
+    --accent-dark: #5645C4;
+    --text: #2D2A45;
+    --muted: #726D91;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: "Golos Text", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+  }
+  header { text-align: center; padding: 52px 16px 8px; position: relative; }
+  header h1 { font-size: 42px; font-weight: 800; letter-spacing: -0.02em; }
+  header h1 span { color: var(--accent); }
+  header p { margin-top: 10px; color: var(--muted); font-size: 15px; }
+  .infobtn {
+    position: absolute; top: 20px; right: 24px;
+    width: 38px; height: 38px; border-radius: 50%;
+    border: 1.5px solid var(--border); background: var(--card);
+    font-size: 17px; font-weight: 700; color: var(--muted); cursor: pointer;
+    font-family: inherit;
+  }
+  .infobtn:hover { color: var(--accent); border-color: var(--accent); }
+  .wrap { max-width: 720px; margin: 0 auto; padding: 24px 16px 64px; }
+  .searchbar {
+    display: flex; align-items: center; gap: 10px;
+    background: var(--card); border: 1.5px solid var(--border); border-radius: 16px;
+    padding: 6px 20px;
+    box-shadow: 0 2px 10px rgba(60,50,120,.07);
+  }
+  .searchbar svg { flex: none; }
+  .searchbar input {
+    flex: 1; border: none; outline: none; font-size: 24px; padding: 12px 4px;
+    color: var(--text); letter-spacing: .04em; background: transparent; font-family: inherit;
+    text-transform: uppercase;
+  }
+  .searchbar input::placeholder { color: #B4AFD3; font-weight: 600; }
+  .panel {
+    background: var(--card); border: 1.5px solid var(--border); border-radius: 18px;
+    padding: 22px; margin: 22px auto 0; max-width: 540px;
+    box-shadow: 0 2px 10px rgba(60,50,120,.07);
+  }
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .field {
+    display: flex; align-items: center;
+    border: 1.5px solid var(--border); border-radius: 12px; padding: 4px 14px;
+    background: #FBFAFE;
+  }
+  .field:focus-within { border-color: var(--accent); }
+  .field label { font-size: 14px; font-weight: 600; color: var(--muted); white-space: nowrap; }
+  .field input {
+    width: 100%; border: none; outline: none; font-size: 15px;
+    padding: 9px 6px; color: var(--text); font-weight: 600; background: transparent; font-family: inherit;
+    text-transform: uppercase;
+  }
+  .kzkeys { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 14px; justify-content: center; }
+  .kzkeys button {
+    border: 1.5px solid var(--border); background: var(--chip); border-radius: 10px;
+    font-size: 16px; padding: 6px 11px; cursor: pointer; color: var(--text); font-family: inherit;
+    text-transform: uppercase;
+  }
+  .kzkeys button:hover { border-color: var(--accent); color: var(--accent); }
+  .searchbtn {
+    display: block; width: 100%; margin-top: 16px;
+    background: var(--accent); border: none; border-radius: 12px;
+    font-size: 16px; font-weight: 700; letter-spacing: .08em;
+    padding: 14px; cursor: pointer; color: #fff; font-family: inherit;
+  }
+  .searchbtn:hover { background: var(--accent-dark); }
+  .dictbar { margin-top: 12px; text-align: center; font-size: 13px; color: var(--muted); }
+  #results { max-width: 720px; margin: 28px auto 0; }
+  .group {
+    background: var(--card); border: 1.5px solid var(--border); border-radius: 16px;
+    padding: 18px 20px; margin-bottom: 14px;
+  }
+  .group h3 { font-size: 14px; color: var(--muted); margin-bottom: 12px; font-weight: 600; }
+  .words { display: flex; flex-wrap: wrap; gap: 8px; }
+  .word {
+    background: var(--chip); border: 1px solid var(--chip-border); border-radius: 9px;
+    padding: 6px 12px; font-size: 16px; cursor: pointer; user-select: none;
+  }
+  .word:hover { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .summary { text-align: center; font-weight: 700; margin-top: 26px; font-size: 17px; }
+  .empty { text-align: center; color: var(--muted); margin-top: 24px; }
+  /* info modal */
+  .overlay {
+    position: fixed; inset: 0; background: rgba(35,30,60,.45);
+    display: none; align-items: flex-start; justify-content: center;
+    padding: 40px 16px; z-index: 10; overflow-y: auto;
+  }
+  .overlay.open { display: flex; }
+  .modal {
+    background: var(--card); border-radius: 18px; max-width: 560px; width: 100%;
+    padding: 28px 30px; position: relative; line-height: 1.65; font-size: 14.5px;
+  }
+  .modal h2 { font-size: 20px; margin-bottom: 14px; }
+  .modal h4 { font-size: 15px; margin: 18px 0 6px; color: var(--accent); }
+  .modal p { margin-bottom: 8px; }
+  .modal a { color: var(--accent); }
+  .modal .close {
+    position: absolute; top: 14px; right: 16px; border: none; background: none;
+    font-size: 22px; cursor: pointer; color: var(--muted); font-family: inherit;
+  }
+  .modal kbd {
+    background: var(--chip); border: 1px solid var(--chip-border); border-radius: 5px;
+    padding: 1px 6px; font-family: inherit; font-size: 13px;
+  }
+  @media (max-width: 560px) {
+    .grid { gap: 8px; }
+    .field { padding: 2px 10px; border-radius: 10px; }
+    .field label { font-size: 12px; }
+    .field input { font-size: 14px; padding: 7px 4px; }
+    header h1 { font-size: 30px; }
+    .searchbar input { font-size: 19px; }
+    .panel { padding: 16px; }
+  }
+</style>
+</head>
+<body>
+<header>
+  <button class="infobtn" id="infoOpen" title="Ақпарат және қолдану ережесі">i</button>
+  <h1>Қазақша <span>сөз іздеу</span></h1>
+  <p>Сөздің басы, соңы, құрамы не ұзындығы бойынша іздеңіз</p>
+</header>
+
+<div class="wrap">
+  <div class="searchbar">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#726D91" stroke-width="2.4" stroke-linecap="round">
+      <circle cx="11" cy="11" r="7"/><line x1="16.5" y1="16.5" x2="21" y2="21"/>
+    </svg>
+    <input id="pattern" placeholder="СІЗДІҢ ӘРІПТЕРІҢІЗ" autocomplete="off" style="caret-color:#6D5AE6">
+  </div>
+
+  <div class="panel">
+    <div class="grid">
+      <div class="field"><label>Басы:</label><input id="starts" autocomplete="off"></div>
+      <div class="field"><label>Соңы:</label><input id="ends" autocomplete="off"></div>
+      <div class="field"><label>Құрамында:</label><input id="contains" autocomplete="off"></div>
+      <div class="field"><label>Ұзындығы:</label><input id="length" inputmode="numeric" autocomplete="off"></div>
+      <div class="field"><label>Болмасын:</label><input id="exclude" autocomplete="off"></div>
+      <div class="field"><label>Болсын:</label><input id="include" autocomplete="off"></div>
+    </div>
+    <div class="kzkeys" id="kzkeys"></div>
+    <button class="searchbtn" id="go">ІЗДЕУ</button>
+    <div class="dictbar">Сөздік: <span id="dictinfo">жүктелуде…</span></div>
+  </div>
+
+  <div class="summary" id="summary"></div>
+  <div id="results"></div>
+</div>
+
+<div class="overlay" id="defOverlay">
+  <div class="modal">
+    <button class="close" id="defClose">×</button>
+    <h2 id="defWord" style="text-transform:lowercase"></h2>
+    <div id="defBody" style="white-space:pre-line; max-height:340px; overflow-y:auto;">Жүктелуде…</div>
+    <p style="margin-top:16px; display:flex; gap:14px; flex-wrap:wrap;">
+      <button id="defCopy" style="border:1.5px solid var(--border); background:var(--chip); border-radius:10px; padding:7px 14px; cursor:pointer; font-family:inherit; font-size:14px; color:var(--text)">Сөзді көшіру</button>
+      <a id="defWikt" href="#" target="_blank" rel="noopener" style="align-self:center">Уикисөздік</a>
+      <a id="defQor" href="#" target="_blank" rel="noopener" style="align-self:center">Sozdikqor</a>
+      <a id="defSozdik" href="#" target="_blank" rel="noopener" style="align-self:center">sozdik.kz</a>
+    </p>
+  </div>
+</div>
+
+<div class="overlay" id="overlay">
+  <div class="modal">
+    <button class="close" id="infoClose">×</button>
+    <h2>Қолдану ережесі</h2>
+    <p>Жоғарғы үлкен өріске сөз үлгісін жазыңыз: <kbd>?</kbd> белгісі кез келген бір
+    әріпті білдіреді. Мысалы, <kbd>а?ай</kbd> → <i>абай, адай, алай…</i></p>
+    <p>Қосымша сүзгілер: <b>Басы</b> / <b>Соңы</b> / <b>Құрамында</b> — сөздің тиісті
+    бөлігі; <b>Ұзындығы</b> — әріп саны; <b>Болмасын</b> — осы әріптер кездеспейтін,
+    <b>Болсын</b> — осы әріптердің бәрі бар сөздер. Табылған сөзді бассаңыз,
+    оның түсіндірмесі ашылады (Уикисөздіктен).</p>
+
+    <h4>Сөздік туралы</h4>
+    <p>Сөздік қоры — <a href="https://github.com/taem/hunspell-kk" target="_blank" rel="noopener">hunspell-kk</a>
+    жобасынан алынған орфографиялық қазақ тілі сөздігі (~54 000 сөз).
+    Ол OpenOffice Lingucomponent жобасы аясында жасалған: сөз тізімі — GNU aspell-kk
+    сөздігінен (құрастырушы Алексей Липчанский, gnu.kz), аффикс файлы —
+    Ақмарал Мұсаева (Қалдыбай Бектайұлы сөздігінің қосымшалары негізінде),
+    László Németh пен Rail Aliev қатысуымен. GitHub-та жинақтаған — Timur Birsh (Алматы).</p>
+    <p>Лицензиясы: GNU GPL 2.0+, GNU LGPL 2.1+ және Mozilla MPL 1.1+ (ашық лицензиялар).</p>
+    <p style="color:var(--muted); font-size:13px;">Идея бастауы —
+    <a href="https://github.com/jarjan/qate.js" target="_blank" rel="noopener">qate.js</a>
+    (Zharzhan Kulmyrza, MIT).</p>
+
+    <h4>Сайт авторы</h4>
+    <p>Сайтты жасаған —
+    <a href="https://github.com/nurbakhyts" target="_blank" rel="noopener">Нұрбахыт Серікұлы</a>.</p>
+  </div>
+</div>
+
+<script>
+(function(){
+  var DICT = [];               // [{w, c}]
+  var SOURCES = [
+    { url: "https://raw.githubusercontent.com/taem/hunspell-kk/master/kk_KZ.dic", name: "hunspell-kk", type: "dic" },
+    { url: "https://cdn.jsdelivr.net/gh/taem/hunspell-kk@master/kk_KZ.dic", name: "hunspell-kk", type: "dic" },
+    { url: "https://raw.githubusercontent.com/jarjan/qate.js/master/qate.js", name: "qate.js", type: "qate" }
+  ];
+  var $ = function(id){ return document.getElementById(id); };
+  var lastFocused = $("pattern");
+
+  // info modal
+  $("infoOpen").addEventListener("click", function(){ $("overlay").classList.add("open"); });
+  $("infoClose").addEventListener("click", function(){ $("overlay").classList.remove("open"); });
+  $("overlay").addEventListener("click", function(e){
+    if (e.target === this) this.classList.remove("open");
+  });
+  document.addEventListener("keydown", function(e){
+    if (e.key === "Escape") { $("overlay").classList.remove("open"); $("defOverlay").classList.remove("open"); }
+  });
+
+  // definition modal
+  var defCurrent = "";
+  $("defClose").addEventListener("click", function(){ $("defOverlay").classList.remove("open"); });
+  $("defOverlay").addEventListener("click", function(e){
+    if (e.target === this) this.classList.remove("open");
+  });
+  $("defCopy").addEventListener("click", function(){
+    navigator.clipboard && navigator.clipboard.writeText(defCurrent);
+    this.textContent = "Көшірілді";
+    var btn = this;
+    setTimeout(function(){ btn.textContent = "Сөзді көшіру"; }, 1200);
+  });
+
+  // Уикисөздік мәтінін құрылымдап көрсету
+  var SKIP_SECTIONS = /септеу|жіктеу|тәуелдеу|дереккөз|сілтеме|әдебиет|галерея|аудармалар/i;
+  function renderExtract(text, sourceLabel){
+    var body = $("defBody");
+    body.innerHTML = "";
+    var lines = text.split(/\n/), skip = false, shown = 0;
+    var badge = function(t){
+      var el = document.createElement("div");
+      el.textContent = t;
+      el.style.cssText = "display:inline-block;background:var(--chip);color:var(--accent);font-weight:700;font-size:12.5px;border-radius:7px;padding:3px 10px;margin:12px 0 6px;text-transform:uppercase;letter-spacing:.04em";
+      body.appendChild(el);
+    };
+    var para = function(t){
+      var el = document.createElement("p");
+      el.textContent = t;
+      el.style.cssText = "margin:0 0 7px;line-height:1.6";
+      body.appendChild(el);
+    };
+    for (var i = 0; i < lines.length && shown < 40; i++) {
+      var line = lines[i].trim();
+      if (!line) continue;
+      var h = line.match(/^=+\s*(.*?)\s*=+$/);
+      if (h) {
+        skip = SKIP_SECTIONS.test(h[1]);
+        if (!skip && h[1] && !/қазақша|kazakh/i.test(h[1])) { badge(h[1]); shown++; }
+        continue;
+      }
+      if (skip) continue;
+      if (/^аудармалары:?$/i.test(line)) { skip = false; badge("Аудармалары"); shown++; continue; }
+      para(line); shown++;
+    }
+    if (sourceLabel) {
+      var src = document.createElement("p");
+      src.textContent = sourceLabel;
+      src.style.cssText = "margin-top:12px;font-size:12.5px;color:var(--muted)";
+      body.appendChild(src);
+    }
+    if (!body.children.length) return false;
+    return true;
+  }
+
+  function tryWikipedia(word){
+    return fetch("https://kk.wikipedia.org/api/rest_v1/page/summary/" + encodeURIComponent(word))
+      .then(function(r){ if (!r.ok) throw 0; return r.json(); })
+      .then(function(j){
+        if (j && j.extract && j.type !== "disambiguation") {
+          renderExtract(j.extract, "Дереккөзі: Уикипедия (энциклопедиялық анықтама)");
+          return true;
+        }
+        return false;
+      })
+      .catch(function(){ return false; });
+  }
+
+  function showNotFound(){
+    $("defBody").innerHTML = "";
+    var p = document.createElement("p");
+    p.textContent = "Бұл сөздің түсіндірмесі Уикисөздік пен Уикипедиядан табылмады. Төмендегі сілтемелерден іздеп көріңіз — Sozdikqor-да 300 000-нан астам сөз бар.";
+    p.style.cssText = "line-height:1.6;color:var(--muted)";
+    $("defBody").appendChild(p);
+  }
+
+  function showDefinition(word){
+    defCurrent = word;
+    $("defWord").textContent = word;
+    $("defBody").textContent = "Жүктелуде…";
+    $("defWikt").href = "https://kk.wiktionary.org/wiki/" + encodeURIComponent(word);
+    $("defQor").href = "https://sozdikqor.kz/search?q=" + encodeURIComponent(word);
+    $("defSozdik").href = "https://sozdik.kz/ru/dictionary/translate/kk/ru/" + encodeURIComponent(word) + "/";
+    $("defOverlay").classList.add("open");
+
+    var api = "https://kk.wiktionary.org/w/api.php?action=query&format=json&formatversion=2&origin=*" +
+              "&prop=extracts&explaintext=1&redirects=1&titles=" + encodeURIComponent(word);
+    fetch(api)
+      .then(function(r){ if (!r.ok) throw 0; return r.json(); })
+      .then(function(j){
+        var page = j && j.query && j.query.pages && j.query.pages[0];
+        var text = page && !page.missing && page.extract ? page.extract.trim() : "";
+        if (text && renderExtract(text, "Дереккөзі: Уикисөздік")) return;
+        return tryWikipedia(word).then(function(ok){ if (!ok) showNotFound(); });
+      })
+      .catch(function(){
+        tryWikipedia(word).then(function(ok){ if (!ok) showNotFound(); });
+      });
+  }
+
+  // Kazakh-specific letter keys
+  ["ә","ғ","қ","ң","ө","ұ","ү","һ","і","?"].forEach(function(ch){
+    var b = document.createElement("button");
+    b.type = "button"; b.textContent = ch;
+    b.addEventListener("mousedown", function(e){ e.preventDefault(); });
+    b.addEventListener("click", function(){
+      if (!lastFocused) lastFocused = $("pattern");
+      var el = lastFocused;
+      var s = el.selectionStart || el.value.length;
+      el.value = el.value.slice(0, s) + ch + el.value.slice(el.selectionEnd || s);
+      el.focus(); el.setSelectionRange(s+1, s+1);
+    });
+    $("kzkeys").appendChild(b);
+  });
+  document.querySelectorAll("input").forEach(function(el){
+    el.addEventListener("focus", function(){ lastFocused = el; });
+    el.addEventListener("keydown", function(e){ if (e.key === "Enter") search(); });
+  });
+
+  function setDictInfo(txt){ $("dictinfo").textContent = txt; }
+
+  function parseQateJs(text){
+    var m = text.match(/nwords\s*=\s*(\[[\s\S]*?\])\s*;/);
+    if (!m) return null;
+    try { return JSON.parse(m[1]); } catch(e){ return null; }
+  }
+
+  // hunspell .dic: бірінші жол — сөз саны, әр жолда "сөз/ЖАЛҒАУ_ЖАЛАУЛАРЫ"
+  function parseDic(text){
+    var lines = text.split(/\r?\n/), out = [];
+    for (var i = 0; i < lines.length; i++) {
+      var w = lines[i].split("/")[0].replace(/^﻿/, "").trim();
+      if (w && !/^\d+$/.test(w)) out.push({ w: w, c: 1 });
+    }
+    return out.length ? out : null;
+  }
+
+  function normalizeList(data){
+    var out = [];
+    data.forEach(function(item){
+      if (typeof item === "string") { item = { w: item, c: 1 }; }
+      if (item && item.w) out.push({ w: String(item.w).toLowerCase().trim(), c: item.c || 1 });
+    });
+    var seen = {};
+    return out.filter(function(x){
+      if (!x.w || seen[x.w]) return false;
+      seen[x.w] = 1; return true;
+    });
+  }
+
+  function loadDefault(i){
+    i = i || 0;
+    if (i >= SOURCES.length) { setDictInfo("жүктелмеді — интернетті тексеріңіз"); return; }
+    var src = SOURCES[i];
+    fetch(src.url)
+      .then(function(r){ if(!r.ok) throw 0; return r.text(); })
+      .then(function(text){
+        var data = src.type === "dic" ? parseDic(text) : parseQateJs(text);
+        if (!data) throw 0;
+        DICT = normalizeList(data);
+        setDictInfo(src.name + " — " + DICT.length.toLocaleString("kk") + " сөз");
+      })
+      .catch(function(){ loadDefault(i+1); });
+  }
+
+  function esc(s){ return s.replace(/[.*+^${}()|[\]\\]/g, "\\$&"); }
+  function wild(s){ return esc(s).replace(/\?/g, "."); }
+
+  function search(){
+    var pattern  = $("pattern").value.toLowerCase().trim();
+    var starts   = $("starts").value.toLowerCase().trim();
+    var ends     = $("ends").value.toLowerCase().trim();
+    var contains = $("contains").value.toLowerCase().trim();
+    var length   = parseInt($("length").value) || 0;
+    var exclude  = $("exclude").value.toLowerCase().replace(/[^а-яёәғқңөұүһі]/g, "");
+    var include  = $("include").value.toLowerCase().replace(/[^а-яёәғқңөұүһі]/g, "");
+
+    var reFull = pattern ? new RegExp("^" + wild(pattern) + "$") : null;
+    var reStarts = starts ? new RegExp("^" + wild(starts)) : null;
+    var reEnds = ends ? new RegExp(wild(ends) + "$") : null;
+    var reContains = contains ? new RegExp(wild(contains)) : null;
+
+    var hits = DICT.filter(function(e){
+      var w = e.w;
+      if (reFull && !reFull.test(w)) return false;
+      if (reStarts && !reStarts.test(w)) return false;
+      if (reEnds && !reEnds.test(w)) return false;
+      if (reContains && !reContains.test(w)) return false;
+      if (length && w.length !== length) return false;
+      for (var i = 0; i < exclude.length; i++) if (w.indexOf(exclude[i]) !== -1) return false;
+      for (var j = 0; j < include.length; j++) if (w.indexOf(include[j]) === -1) return false;
+      return true;
+    });
+
+    var groups = {};
+    hits.forEach(function(e){ (groups[e.w.length] = groups[e.w.length] || []).push(e); });
+    var lens = Object.keys(groups).map(Number).sort(function(a,b){ return a-b; });
+
+    $("summary").textContent = hits.length ? "Табылды: " + hits.length + " сөз" : "";
+    var res = $("results");
+    res.innerHTML = "";
+    if (!hits.length) {
+      res.innerHTML = "<div class='empty'>Ештеңе табылмады. Сүзгілерді өзгертіп көріңіз.</div>";
+      return;
+    }
+    var MAX = 3000, shown = 0;
+    lens.forEach(function(L){
+      if (shown >= MAX) return;
+      var g = groups[L].sort(function(a,b){ return b.c - a.c || a.w.localeCompare(b.w, "kk"); });
+      var div = document.createElement("div");
+      div.className = "group";
+      div.innerHTML = "<h3>" + L + " әріптен тұратын сөздер (" + g.length + ")</h3>";
+      var wl = document.createElement("div");
+      wl.className = "words";
+      g.forEach(function(e){
+        if (shown++ >= MAX) return;
+        var sp = document.createElement("span");
+        sp.className = "word";
+        sp.title = "Түсіндірмесін көру үшін басыңыз";
+        sp.textContent = e.w;
+        sp.addEventListener("click", function(){ showDefinition(e.w); });
+        wl.appendChild(sp);
+      });
+      div.appendChild(wl);
+      res.appendChild(div);
+    });
+    if (hits.length > MAX) {
+      var note = document.createElement("div");
+      note.className = "empty";
+      note.textContent = "Алғашқы " + MAX + " сөз көрсетілді — сүзгіні тарылтыңыз.";
+      res.appendChild(note);
+    }
+  }
+
+  $("go").addEventListener("click", search);
+  loadDefault();
+})();
+</script>
+</body>
+</html>
